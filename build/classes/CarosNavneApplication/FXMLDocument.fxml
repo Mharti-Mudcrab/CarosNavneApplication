@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="750.0" minWidth="1000.0" prefHeight="750.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CarosNavneApplication.FXMLDocumentController">
+   <children>
+      <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" SplitPane.resizableWithParent="false">
+               <children>
+                  <TableView fx:id="tvNavne" disable="true" layoutX="-14.0" layoutY="90.0" maxWidth="-Infinity" prefHeight="720.0" prefWidth="590.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <columns>
+                      <TableColumn fx:id="columnName" prefWidth="350.0" resizable="false" text="Navn" />
+                      <TableColumn fx:id="columnKoen" minWidth="0.0" prefWidth="145.0" text="Køn" />
+                    </columns>
+                  </TableView>
+               </children>
+            </AnchorPane>
+          <AnchorPane minHeight="0.0" minWidth="200.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <TextField fx:id="txtFilePath" editable="false" focusTraversable="false" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="375.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="107.0" AnchorPane.topAnchor="14.0" />
+                  <Button fx:id="btnChooseFile" layoutX="394.0" layoutY="14.0" mnemonicParsing="false" onAction="#btnChooseFileFired" text="Vælg Excel Fil" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0" />
+                  <Label layoutX="14.0" layoutY="58.0" prefHeight="25.0" prefWidth="375.0" text="Skriv navnet på kolonnen som indeholder listen med navne" visible="false">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Label>
+                  <TextField layoutX="394.0" layoutY="58.0" prefHeight="25.0" prefWidth="88.0" visible="false" />
+                  <AnchorPane layoutX="119.0" layoutY="83.0" prefHeight="199.0" prefWidth="259.0" AnchorPane.bottomAnchor="466.0" AnchorPane.leftAnchor="119.0" AnchorPane.rightAnchor="118.0" AnchorPane.topAnchor="83.0">
+                     <children>
+                        <Label fx:id="lblRowNr" disable="true" prefHeight="25.0" prefWidth="156.0" text="Antal rækker med navne" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                        <TextField fx:id="txtRowNr" disable="true" editable="false" prefHeight="25.0" prefWidth="88.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <Button fx:id="btnStartSorting" disable="true" layoutX="78.0" layoutY="83.0" mnemonicParsing="false" onAction="#btnStartSortingFired" prefHeight="39.0" prefWidth="259.0" text="Start Sorting" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0" />
+                        <Button fx:id="btnSaveToFile" disable="true" layoutY="207.0" mnemonicParsing="false" onAction="#btnSaveToFileFired" prefHeight="39.0" prefWidth="259.0" text="Save to File" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+                        <Button fx:id="btnUndoLastSelection" disable="true" layoutY="89.0" mnemonicParsing="false" onAction="#btnUndoLastSelectionFired" prefHeight="39.0" prefWidth="259.0" text="Undo Last Selection" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="89.0" />
+                     </children>
+                  </AnchorPane>
+                  <ProgressBar fx:id="progressBar" disable="true" layoutX="14.0" layoutY="681.0" prefHeight="25.0" prefWidth="469.0" progress="0.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                  <TextArea fx:id="txtfieldOutput" disable="true" editable="false" layoutX="14.0" layoutY="374.0" prefHeight="400.0" prefWidth="468.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                  <Label fx:id="lblProgesss" disable="true" layoutX="210.0" layoutY="713.0" prefHeight="17.0" prefWidth="77.0" textAlignment="CENTER" AnchorPane.bottomAnchor="18.0" AnchorPane.leftAnchor="210.0" AnchorPane.rightAnchor="209.0" />
+                  <ToggleButton fx:id="btnToggleAPI" disable="true" layoutX="394.0" layoutY="255.0" mnemonicParsing="false" onAction="#btnToggleAPIFired" prefHeight="25.0" prefWidth="88.0" selected="true" text="Toggle API" AnchorPane.rightAnchor="13.0" />
+                  <Circle fx:id="apiIndicatorLightOFF" layoutX="438.0" layoutY="244.0" radius="8.0" stroke="BLACK" strokeType="INSIDE" AnchorPane.rightAnchor="50.0">
+                     <fill>
+                        <RadialGradient centerX="0.5" centerY="0.5" radius="1.0">
+                           <stops>
+                              <Stop color="RED" />
+                              <Stop color="WHITE" offset="1.0" />
+                           </stops>
+                        </RadialGradient>
+                     </fill>
+                  </Circle>
+                  <Circle fx:id="apiIndicatorLightON" layoutX="438.0" layoutY="244.0" radius="8.0" stroke="BLACK" strokeType="INSIDE">
+                     <fill>
+                        <RadialGradient centerX="0.5" centerY="0.5" radius="1.0">
+                           <stops>
+                              <Stop color="#00ff2f" />
+                              <Stop color="WHITE" offset="1.0" />
+                           </stops>
+                        </RadialGradient>
+                     </fill>
+                  </Circle>
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>
