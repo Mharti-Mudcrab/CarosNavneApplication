@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -74,6 +76,7 @@ public class FXMLDocumentController implements Initializable {
     private HTTPClient client;
     private boolean isClientExausted;
     private String sex;
+    private String queryName;
     private int newNameCount;
     
     @FXML
@@ -263,6 +266,7 @@ public class FXMLDocumentController implements Initializable {
             progressIndex = p.getFirstIndex();
             nameCatalogue.remove(p.getName());
             tvNavne.getItems().remove(tvNavne.getItems().size()-1);
+            outputToTxtfieldLn("Removed " + p.getName() + " from namePool");
             // while there are still names in entrylist with same firstIndex repeat last step
             while (!nameEntrylist.isEmpty() && progressIndex == nameEntrylist.peek().getFirstIndex()) {
                 p = nameEntrylist.pop();
@@ -296,168 +300,206 @@ public class FXMLDocumentController implements Initializable {
         }
     }
     
+    private void callSortingDialogue()
+    {
+        synchronized (this) {
+            sex = DialogCatalogue.ShowChoiceDialogue(null, queryName, !nameCatalogue.isEmpty());
+            notify();
+        }
+    }
+    
     @FXML
     private void btnStartSortingFired(ActionEvent event) {
-        if (progressIndex == 0) {
-            outputToTxtfieldLn("Sorting Started!");
-        }
-        else {
-            outputToTxtfieldLn("Sorting resumed.");
-        }
         
-        Sheet sheet = wb.getSheetAt(0);
-        
-        for (; progressIndex < nrOfRows; progressIndex++) {
-            
-            updateProgressBar();
-            
-            Row row = sheet.getRow(progressIndex);
-            if (row == null) {
-                continue;
-            }
-            Cell cell = row.getCell(0);
-            
-            // Get cellString and cellName array
-            String cellString;
-            if (cell.getCellType() != CellType.STRING) {
-                DataFormatter df = new DataFormatter();
-                cellString = df.formatCellValue(cell).trim();
-            }
-            else {
-                cellString = cell.getStringCellValue().trim();
-            }
-            
-            // Clean and split.
-            String[] cellName = getSplitAndClean(cellString);
-            
-            // Is the list empty? Then we are done here
-            boolean isThereNothing = true;
-            for (String str : cellName) {
-                if (!str.isEmpty()) {
-                    isThereNothing = false;
+        Thread sortingThread = new Thread(() -> 
+        {
+            synchronized (this) 
+            {
+                if (progressIndex == 0) {
+                    outputToTxtfieldLn("Sorting Started!");
                 }
-            }
-            if (isThereNothing) {
-                sex = "Unknown";
-            }
-            
-            // Is there a match in the list?
-            for (int i = 0; i < cellName.length && !isThereNothing; i++) {
-                cellName[i] = toTitleCase(cellName[i]);
-                if (nameCatalogue.containsKey(cellName[i])) {
-                    sex = nameCatalogue.get(cellName[i]).getSex();
-                    break;
+                else {
+                    outputToTxtfieldLn("Sorting resumed.");
                 }
-            }
-            
-            // Is there any of the subnames that we do't have in the system?
-            if ((cellName.length > 1 || sex == null) && !isThereNothing) {
-                 // If there was no match we gotta call the API or the dialogbox for help... with the sex
-                if (sex == null) {
-                    // Let's first ask the API
-                    if (!isClientExausted) {
-                        for (String name : cellName) {
-                            sex = client.sendHTTP(name);
-                            // If it is exausted we mark exausted and never return
-                            if (sex.equals("error")) {
-                                btnToggleAPI.fire();
-                                break;
-                            }
-                            // If we got a match we are done here
-                            else if (!sex.equals("Unknown")) {
-                                break;
-                            }
+
+                Sheet sheet = wb.getSheetAt(0);
+
+                for (; progressIndex < nrOfRows; progressIndex++) {
+
+                    /*Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateProgressBar();
+                        }
+                    }); */
+
+                    Row row = sheet.getRow(progressIndex);
+                    if (row == null) {
+                        continue;
+                    }
+                    Cell cell = row.getCell(0);
+
+                    // Get cellString and cellName array
+                    String cellString;
+                    if (cell.getCellType() != CellType.STRING) {
+                        DataFormatter df = new DataFormatter();
+                        cellString = df.formatCellValue(cell).trim();
+                    }
+                    else {
+                        cellString = cell.getStringCellValue().trim();
+                    }
+
+                    // Clean and split.
+                    String[] cellName = getSplitAndClean(cellString);
+
+                    // Is the list empty? Then we are done here
+                    boolean isThereNothing = true;
+                    for (String str : cellName) {
+                        if (!str.isEmpty()) {
+                            isThereNothing = false;
                         }
                     }
-                    
-                    // If API is exausted or failed to return Man or Woman, we need user help.
-                    if (sex == null || sex.equals("Unknown") || sex.equals("error")) {
-                        for (String st: cellString.split("[ ,]")) {
-                            st = st.replaceAll("\\d", "");
-                            if (!st.equals("")) {
-                                sex = DialogCatalogue.ShowChoiceDialogue(null, st, !nameCatalogue.isEmpty());
-                                if (sex.equals("Stop")) {
-                                    sex = null;
-                                    outputToTxtfieldLn("Sorting Paused.");
-                                    return;
+                    if (isThereNothing) {
+                        sex = "Unknown";
+                    }
+
+                    // Is there a match in the list?
+                    for (int i = 0; i < cellName.length && !isThereNothing; i++) {
+                        cellName[i] = toTitleCase(cellName[i]);
+                        if (nameCatalogue.containsKey(cellName[i])) {
+                            sex = nameCatalogue.get(cellName[i]).getSex();
+                            break;
+                        }
+                    }
+
+                    // Is there any of the subnames that we do't have in the system?
+                    if ((cellName.length > 1 || sex == null) && !isThereNothing) {
+                         // If there was no match we gotta call the API or the dialogbox for help... with the sex
+                        if (sex == null) {
+                            // Let's first ask the API
+                            if (!isClientExausted) {
+                                for (String name : cellName) {
+                                    sex = client.sendHTTP(name);
+                                    // If it is exausted we mark exausted and never return
+                                    if (sex.equals("error")) {
+                                        outputToTxtfieldLn("API trial request limit reached on this conncetion, try switching to a different one and enable API again.");
+                                        btnToggleAPI.fire();
+                                        break;
+                                    }
+                                    // If we got a match we are done here
+                                    else if (!sex.equals("Unknown")) {
+                                        break;
+                                    }
                                 }
-                                break;
+                            }
+
+                            // If API is exausted or failed to return Man or Woman, we need user help.
+                            if (sex == null || sex.equals("Unknown") || sex.equals("error")) {
+                                for (String st: cellString.split("[ ,]")) {
+                                    queryName = st.replaceAll("\\d", "");
+                                    if (!st.equals("")) {
+                                        Platform.runLater(() -> {
+                                            callSortingDialogue();
+                                        });
+                                        while(sex == null || sex.equals("error"))
+                                        {   
+                                            try {
+                                                wait();
+                                            } catch (InterruptedException ex) {
+                                                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                                            }
+                                        }
+                                        if (sex.equals("Stop")) {
+                                            sex = null;
+                                            outputToTxtfieldLn("Sorting Paused.");
+                                            return;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        // Was the previous button pressed?
+                        if (sex.equals("Get Previous")) {
+                            btnUndoLastSelectionFired(null);
+                            // Jump out and return to progressIndex++ -1
+                            progressIndex--;
+                            continue;
+                        }
+
+                        // Did we gain new information?
+                        for (String name : cellName) {
+                            if (!nameCatalogue.containsKey(name)) {
+                                nameCatalogue.put(name, new Person(cellString, sex, progressIndex));
+                                nameEntrylist.add(new Person(name, sex, progressIndex));
+                                outputToTxtfieldLn("Updated nameCatalogue with: " + name + ", " + sex);
+
+                                // Update table view
+                                tvNavne.getItems().add(new Person(name, sex, progressIndex));
+                                outputToTxtfieldLn("Updated tableView with: " + name + ", " + sex);
+
+                                // Update counter for every new entry
+                                newNameCount++; //TOBEREMOVED
                             }
                         }
                     }
-                }
-                // Was the previous button pressed?
-                if (sex.equals("Get Previous")) {
-                    btnUndoLastSelectionFired(null);
-                    // Jump out and return to progressIndex++ -1
-                    progressIndex--;
-                    continue;
-                }
-                
-                // Did we gain new information?
-                for (String name : cellName) {
-                    if (!nameCatalogue.containsKey(name)) {
-                        nameCatalogue.put(name, new Person(cellString, sex, progressIndex));
-                        nameEntrylist.add(new Person(name, sex, progressIndex));
-                        outputToTxtfieldLn("Updated nameCatalogue with: " + name + ", " + sex);
 
-                        // Update table view
-                        tvNavne.getItems().add(new Person(name, sex, progressIndex));
-                        outputToTxtfieldLn("Updated tableView with: " + name + ", " + sex);
-                        
-                        // Update counter for every new entry
-                        newNameCount++; //TOBEREMOVED
+                    namePool.add(new Person(cellString, sex, progressIndex));
+                    outputToTxtfieldLn("Added to namePool: " + namePool.get(namePool.size()-1));
+
+
+
+                    // If ended here, sex was used and needs to be reset for next time
+                    sex = null;
+
+        //            if (progressIndex >= 21000) {
+        //                break;
+        //            }
+
+                    // Report number of new catalogue entries
+                    if (progressIndex % 1000 == 0 && progressIndex != 0) {
+                        System.out.println(getTimestamp() + " " + progressIndex + ", " + newNameCount);
+                        outputToTxtfieldLn("Number of new names added within the last 1000: " + newNameCount);
+                        newNameCount = 0;
                     }
                 }
-            }
-            
-            namePool.add(new Person(cellString, sex, progressIndex));
-            outputToTxtfieldLn("Added to namePool: " + namePool.get(namePool.size()-1));
-            
-            
-            
-            // If ended here, sex was used and needs to be reset for next time
-            sex = null;
-            
-//            if (progressIndex >= 21000) {
-//                break;
-//            }
 
-            // Report number of new catalogue entries
-            if (progressIndex % 1000 == 0 && progressIndex != 0) {
-                System.out.println(getTimestamp() + " " + progressIndex + ", " + newNameCount);
-                outputToTxtfieldLn("Number of new names added within the last 1000: " + newNameCount);
-                newNameCount = 0;
-            }
-        }
-        
-        // If sorting is finished
-        if (progressIndex == nrOfRows) {
-            outputToTxtfieldLn("Sorting is Done!");
+                // If sorting is finished
+                if (progressIndex == nrOfRows) {
+                    outputToTxtfieldLn("Sorting is Done!");
 
-            System.out.println("Contents of namePool:\n"
-                             + "-------------------------------");
-            for (Person p : namePool) {
-                System.out.printf("%-30s%-8s\n", p.getName(), p.getSex(), p.getFirstIndex());
-            }
+                    System.out.println("Contents of namePool:\n"
+                                     + "-------------------------------");
+                    for (Person p : namePool) {
+                        System.out.printf("%-30s%-8s\n", p.getName(), p.getSex(), p.getFirstIndex());
+                    }
 
-            System.out.println("\nContents of nameCatalogue:\n"
-                             + "-------------------------------");
-            Iterator<String> keys = nameCatalogue.keySet().iterator();
-            Iterator<Person> persons = nameCatalogue.values().iterator();
-            for (; keys.hasNext() && persons.hasNext();) {
-                Person p = persons.next();
-                String s = keys.next();
-                System.out.printf("%-20s%-8s%-5s\n", s, p.getSex(), p.getFirstIndex());
-            }
+                    System.out.println("\nContents of nameCatalogue:\n"
+                                     + "-------------------------------");
+                    Iterator<String> keys = nameCatalogue.keySet().iterator();
+                    Iterator<Person> persons = nameCatalogue.values().iterator();
+                    for (; keys.hasNext() && persons.hasNext();) {
+                        Person p = persons.next();
+                        String s = keys.next();
+                        System.out.printf("%-20s%-8s%-5s\n", s, p.getSex(), p.getFirstIndex());
+                    }
 
-            btnSaveToFile.setDisable(false);
-            btnUndoLastSelection.setDisable(false);
-            btnStartSorting.setDisable(true);
-    
-            updateProgressBar();
-            System.out.println("Finished! progressIndex: " + progressIndex + ", nrOfRows: " + nrOfRows);
-        }
+                    btnSaveToFile.setDisable(false);
+                    btnUndoLastSelection.setDisable(false);
+                    btnStartSorting.setDisable(true);
+
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateProgressBar();
+                        }
+                    }); 
+                    System.out.println("Finished! progressIndex: " + progressIndex + ", nrOfRows: " + nrOfRows);
+                }
+            }
+        });
+        sortingThread.setDaemon(true);
+        sortingThread.start();
     }
     
     @FXML
@@ -554,16 +596,19 @@ public class FXMLDocumentController implements Initializable {
     }       
 
     private void updateProgressBar() {
-        if (progressIndex % progressBarInterval == 0 || progressIndex == nrOfRows) {
-            progressBar.setProgress(((double)(progressIndex)) / nrOfRows);
-            lblProgesss.setText(Math.round(progressBar.getProgress() * 10000) /100.0 + "%");
-            if (progressBar.getProgress() == 1) {
-                btnSaveToFile.setDisable(false);
-                btnUndoLastSelection.setDisable(false);
-            }
-            else {
-                btnSaveToFile.setDisable(true);
-                btnUndoLastSelection.setDisable(true);
+        synchronized (this) 
+        {            
+            if (progressIndex % progressBarInterval == 0 || progressIndex == nrOfRows) {
+                progressBar.setProgress(((double)(progressIndex)) / nrOfRows);
+                lblProgesss.setText(Math.round(progressBar.getProgress() * 10000) /100.0 + "%");
+                if (progressBar.getProgress() == 1) {
+                    btnSaveToFile.setDisable(false);
+                    btnUndoLastSelection.setDisable(false);
+                }
+                else {
+                    btnSaveToFile.setDisable(true);
+                    btnUndoLastSelection.setDisable(true);
+                }
             }
         }
     }

@@ -75,19 +75,29 @@ public class DialogCatalogue {
                 case UP:
                     ((Button) alert.getDialogPane().lookupButton(getPrevious)).fire();
                     break;
+                case ESCAPE:
+                    alert.close();
+                    break;
                 case L:
                 case G:
                     link.fire();
+                    break;
+                default:
+                    System.out.println("Key fired " + key.getCode().getName() + " " + key.getCode().name());
                     break;
             }
         });
         
         Optional<ButtonType> option = alert.showAndWait();
-        if (!option.isPresent()) {
-            return "Stop";
-        }
+        if (option.isPresent())
+            System.out.println("Choice dialogue returned " + option.get().getText());
         else
+            System.out.println("Choice dialogue returned nothing");
+            
+        if (option.isPresent())
             return option.get().getText();
+        else
+            return "Stop";
     }
     
     public static void showAlert() {
@@ -106,7 +116,7 @@ public class DialogCatalogue {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel File", "*.xlsx", "*.xls"));
         fc.setTitle("Choose Excel document");
         String path = System.getProperty("user.home") + "\\Desktop";
-        fc.setInitialDirectory(new File(path));
+        fc.setInitialDirectory(new File("C:\\GitHubDesctopRepositories\\CarosNavneApplication")); //path));
         
         // Show filechooser
         File file;

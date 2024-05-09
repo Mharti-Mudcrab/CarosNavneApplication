@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="CarosNavneApplication.jnlp">
+  <information>
+    <title>CarosNavneApplication</title>
+    <vendor>madsw</vendor>
+    <description>null</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="CarosNavneApplication.jar" size="24767" download="eager" />
+    <jar href="lib\commons-collections4-4.4.jar" size="751914" download="eager" />
+    <jar href="lib\commons-compress-1.20.jar" size="632424" download="eager" />
+    <jar href="lib\commons-logging-1.2.jar" size="61829" download="eager" />
+    <jar href="lib\gson-2.8.6.jar" size="240255" download="eager" />
+    <jar href="lib\httpclient-osgi-4.5.10.jar" size="1365205" download="eager" />
+    <jar href="lib\httpcore-4.4.12.jar" size="328347" download="eager" />
+    <jar href="lib\poi-5.0.0.jar" size="2906684" download="eager" />
+    <jar href="lib\poi-ooxml-5.0.0.jar" size="1880314" download="eager" />
+    <jar href="lib\poi-ooxml-lite-5.0.0.jar" size="8137483" download="eager" />
+    <jar href="lib\xmlbeans-4.0.0.jar" size="2493024" download="eager" />
+  </resources>
+  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="CarosNavneApplication" >
+    <param name="requiredFXVersion" value="8.0+"/>
+  </applet-desc>
+  <jfx:javafx-desc  width="800" height="600" main-class="CarosNavneApplication.GenDist"  name="CarosNavneApplication" />
+  <update check="always"/>
+</jnlp>
